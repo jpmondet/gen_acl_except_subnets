@@ -26,7 +26,11 @@ def get_sublist_from_excluded_subnet(subnet, supernet):
 def find_subnets_to_be_included(subnets, supernet):
     supnet = ip_network(supernet)
 
-    subs_list = get_sublist_from_excluded_subnet(subnets[0], supnet)
+    try:
+        subs_list = get_sublist_from_excluded_subnet(subnets[0], supnet)
+    except ValueError:
+        print("The supernet you chose is not a supernet of the first subnet to exclude")
+        exit(2)
 
     for sub in subnets[1:]:
 
@@ -48,13 +52,13 @@ def find_subnets_to_be_included(subnets, supernet):
 
     return subs_list
 
-def generate_access_list(subnets):
+def generate_access_list(subnets, acl_name):
     j2_env = Environment(
         loader=FileSystemLoader(".")#, trim_blocks=True, autoescape=True
     )
     template = j2_env.get_template("acl.j2")
     
-    print(template.render(subnets=enumerate(subnets)))
+    print(template.render(subnets=enumerate(subnets), acl_name=acl_name))
 
     
 def to_string_list(subnets):
@@ -69,18 +73,25 @@ def to_string_list(subnets):
 def main():
     parser = ArgumentParser(description='Generates exhaustive access-list entries to match all except a few subnets')
     parser.add_argument(
-        "-fsub",
+        "-f",
         "--subnets_file",
         type=str,
         help="File containing a list of subnets to exclude",
         default='subnets_to_exclude.yaml',
     )
     parser.add_argument(
-        "-sup",
+        "-s",
         "--supernet",
         type=str,
         help="supernet including the subnets to exclude",
         default='0.0.0.0/0',
+    )
+    parser.add_argument(
+        "-n",
+        "--acl_name",
+        type=str,
+        help="Name of the ACL",
+        default='SAMPLE_ACL_NAME',
     )
 
     args = parser.parse_args()
@@ -94,7 +105,7 @@ def main():
     subs_to_incl = find_subnets_to_be_included(excl_subs_list, args.supernet)
     subs_str_to_incl = to_string_list(subs_to_incl)
 
-    generate_access_list(subs_str_to_incl)
+    generate_access_list(subs_str_to_incl, args.acl_name)
 
 if __name__ == "__main__":
     main()
