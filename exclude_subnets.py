@@ -20,17 +20,25 @@ def extract_subnets_from_file(subnets_file):
 
     return subnets
 
+
+def validate_subnets_in_file_against_supernet(excl_subs_list, supernet):
+    supnet = ip_network(supernet)
+
+    for subnet in excl_subs_list:
+        try:
+            list(supnet.address_exclude(subnet))
+        except ValueError:
+            print(f"The supernet {supernet} is not a supernet of the subnet {subnet}")
+            exit(3)
+
+
 def get_sublist_from_excluded_subnet(subnet, supernet):
     return list(supernet.address_exclude(subnet))
 
 def find_subnets_to_be_included(subnets, supernet):
     supnet = ip_network(supernet)
 
-    try:
-        subs_list = get_sublist_from_excluded_subnet(subnets[0], supnet)
-    except ValueError:
-        print("The supernet you chose is not a supernet of the first subnet to exclude")
-        exit(3)
+    subs_list = get_sublist_from_excluded_subnet(subnets[0], supnet)
 
     for sub in subnets[1:]:
 
@@ -112,6 +120,8 @@ def main():
         exit(2)
 
     excl_subs_list = extract_subnets_from_file(args.subnets_file)
+
+    validate_subnets_in_file_against_supernet(excl_subs_list, args.supernet)
 
     subs_to_incl = find_subnets_to_be_included(excl_subs_list, args.supernet)
     subs_str_to_incl = to_string_list(subs_to_incl)
