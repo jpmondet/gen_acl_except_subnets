@@ -30,7 +30,7 @@ def find_subnets_to_be_included(subnets, supernet):
         subs_list = get_sublist_from_excluded_subnet(subnets[0], supnet)
     except ValueError:
         print("The supernet you chose is not a supernet of the first subnet to exclude")
-        exit(2)
+        exit(3)
 
     for sub in subnets[1:]:
 
@@ -52,11 +52,11 @@ def find_subnets_to_be_included(subnets, supernet):
 
     return subs_list
 
-def generate_access_list(subnets, acl_name):
+def generate_access_list(subnets, acl_name, platform):
     j2_env = Environment(
         loader=FileSystemLoader(".")#, trim_blocks=True, autoescape=True
     )
-    template = j2_env.get_template("acl.j2")
+    template = j2_env.get_template(f"{platform}-acl.j2")
     
     print(template.render(subnets=enumerate(subnets), acl_name=acl_name))
 
@@ -93,6 +93,13 @@ def main():
         help="Name of the ACL",
         default='SAMPLE_ACL_NAME',
     )
+    parser.add_argument(
+        "-p",
+        "--platform",
+        type=str,
+        help="OS/platform for which the ACL should be generated",
+        default='nxos',
+    )
 
     args = parser.parse_args()
 
@@ -100,12 +107,16 @@ def main():
         print(f"Error accessing file {args.fsub}")
         exit(1)
 
+    if args.platform != 'nxos':
+        print("Platform not supported for now")
+        exit(2)
+
     excl_subs_list = extract_subnets_from_file(args.subnets_file)
 
     subs_to_incl = find_subnets_to_be_included(excl_subs_list, args.supernet)
     subs_str_to_incl = to_string_list(subs_to_incl)
 
-    generate_access_list(subs_str_to_incl, args.acl_name)
+    generate_access_list(subs_str_to_incl, args.acl_name, args.platform)
 
 if __name__ == "__main__":
     main()

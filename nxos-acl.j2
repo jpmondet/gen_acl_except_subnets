@@ -1,0 +1,4 @@
+ip access-list {{ acl_name }}
+{% for entry, subnet in subnets -%}
+{{entry * 100 + 100 }} permit ip {{ subnet }} any
+{% endfor %}
