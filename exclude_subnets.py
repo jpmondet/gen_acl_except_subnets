@@ -84,28 +84,32 @@ def main():
         "-f",
         "--subnets_file",
         type=str,
-        help="File containing a list of subnets to exclude",
+        help="File containing a list of subnets to exclude \n \
+                default file: subnets_to_exclude.yaml",
         default='subnets_to_exclude.yaml',
     )
     parser.add_argument(
         "-s",
         "--supernet",
         type=str,
-        help="supernet including the subnets to exclude",
+        help="supernet including the subnets to exclude \n \
+                default supernet: 0.0.0.0/0",
         default='0.0.0.0/0',
     )
     parser.add_argument(
         "-n",
         "--acl_name",
         type=str,
-        help="Name of the ACL",
+        help="Name of the ACL \n \
+                default name : SAMPLE_ACL_NAME",
         default='SAMPLE_ACL_NAME',
     )
     parser.add_argument(
         "-p",
         "--platform",
         type=str,
-        help="OS/platform for which the ACL should be generated",
+        help="OS/platform for which the ACL should be generated \n \
+                default platform: nxos",
         default='nxos',
     )
 
