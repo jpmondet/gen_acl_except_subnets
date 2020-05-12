@@ -8,13 +8,12 @@ from jinja2 import Environment, FileSystemLoader
 from ruamel.yaml import YAML
 
 
-
 def extract_subnets_from_file(subnets_file):
     with open(subnets_file) as fsub:
-        yaml = YAML(typ='safe')
+        yaml = YAML(typ="safe")
         subnets_str = yaml.load(fsub)
 
-    subnets = [] 
+    subnets = []
     for sub_str in subnets_str:
         subnets.append(ip_network(sub_str))
 
@@ -35,6 +34,7 @@ def validate_subnets_in_file_against_supernet(excl_subs_list, supernet):
 def get_sublist_from_excluded_subnet(subnet, supernet):
     return list(supernet.address_exclude(subnet))
 
+
 def find_subnets_to_be_included(subnets, supernet):
     supnet = ip_network(supernet)
 
@@ -51,7 +51,7 @@ def find_subnets_to_be_included(subnets, supernet):
                 subs_to_append = get_sublist_from_excluded_subnet(sub, sub_to_check)
             except ValueError:
                 continue
-            subs_to_replace.append(sub_to_check) 
+            subs_to_replace.append(sub_to_check)
             subs_to_add.extend(subs_to_append)
 
         for sub_to_replace in subs_to_replace:
@@ -60,33 +60,33 @@ def find_subnets_to_be_included(subnets, supernet):
 
     return subs_list
 
+
 def generate_access_list(subnets, acl_name, platform):
-    j2_env = Environment(
-        loader=FileSystemLoader(".")#, trim_blocks=True, autoescape=True
-    )
+    j2_env = Environment(loader=FileSystemLoader("."))  # , trim_blocks=True, autoescape=True
     template = j2_env.get_template(f"{platform}-acl.j2")
-    
+
     print(template.render(subnets=enumerate(subnets), acl_name=acl_name))
 
-    
+
 def to_string_list(subnets):
     sub_list = []
     for sub in subnets:
         sub_list.append(str(sub))
 
-    return sorted(sub_list, key=lambda k:int(k.split('.')[0]))
-
+    return sorted(sub_list, key=lambda k: int(k.split(".")[0]))
 
 
 def main():
-    parser = ArgumentParser(description='Generates exhaustive access-list entries to match all except a few subnets')
+    parser = ArgumentParser(
+        description="Generates exhaustive access-list entries to match all except a few subnets"
+    )
     parser.add_argument(
         "-f",
         "--subnets_file",
         type=str,
         help="File containing a list of subnets to exclude \n \
                 default file: subnets_to_exclude.yaml",
-        default='subnets_to_exclude.yaml',
+        default="subnets_to_exclude.yaml",
     )
     parser.add_argument(
         "-s",
@@ -94,7 +94,7 @@ def main():
         type=str,
         help="supernet including the subnets to exclude \n \
                 default supernet: 0.0.0.0/0",
-        default='0.0.0.0/0',
+        default="0.0.0.0/0",
     )
     parser.add_argument(
         "-n",
@@ -102,7 +102,7 @@ def main():
         type=str,
         help="Name of the ACL \n \
                 default name : SAMPLE_ACL_NAME",
-        default='SAMPLE_ACL_NAME',
+        default="SAMPLE_ACL_NAME",
     )
     parser.add_argument(
         "-p",
@@ -110,7 +110,7 @@ def main():
         type=str,
         help="OS/platform for which the ACL should be generated \n \
                 default platform: nxos",
-        default='nxos',
+        default="nxos",
     )
 
     args = parser.parse_args()
@@ -119,7 +119,7 @@ def main():
         print(f"Error accessing file {args.fsub}")
         exit(1)
 
-    if args.platform != 'nxos':
+    if args.platform != "nxos":
         print("Platform not supported for now")
         exit(2)
 
@@ -131,6 +131,7 @@ def main():
     subs_str_to_incl = to_string_list(subs_to_incl)
 
     generate_access_list(subs_str_to_incl, args.acl_name, args.platform)
+
 
 if __name__ == "__main__":
     main()
